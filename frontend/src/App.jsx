@@ -1,6 +1,45 @@
+import { useState } from "react";
 import "./App.css";
 
 function App() {
+const products = {
+    GYG: [
+      "ERS - Eurasia Bike & Boat",
+      "OLD4 - Old City Basic",
+      "OLD6 - Old City Deluxe",
+    ],
+
+    VIA: [
+      "ERS - Eurasia Bike & Boat",
+      "OLD4 - Old City Basic",
+      "OLD6 - Old City Deluxe",
+    ],
+
+    BTC: [
+      "ERS - Eurasia Bike & Boat",
+    ],
+
+    CYC: [
+      "ERS - Eurasia Bike & Boat",
+      "OLD4 - Old City Basic",
+      "OLD6 - Old City Deluxe",
+      "OLD8 - Old City Combo",
+      "BOS - Beauties of Bosphorus",
+      "BPK - Bike Packing",
+      "BTP - Bike Travel Package",
+    ],
+    B2B: [
+      "ERS - Eurasia Bike & Boat",
+      "OLD4 - Old City Basic",
+      "OLD6 - Old City Deluxe",
+      "OLD8 - Old City Combo",
+      "BPK - Bike Packing",
+      "BTP - Bike Travel Package",
+    ],
+  };
+
+  const [source, setSource] = useState("GYG");
+
   return (
     <div className="app">
 
