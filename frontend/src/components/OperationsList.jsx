@@ -1,7 +1,15 @@
+function formatDate(dateString) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString("tr-TR");
+}
+
 function OperationsList({ operations }) {
   return (
-    <section className="operations-list">
-      <h2>Operations</h2>
+    <div className="card">
+      <h3>Today's Operations</h3>
 
       {operations.length === 0 ? (
         <p>No operations yet.</p>
@@ -10,25 +18,31 @@ function OperationsList({ operations }) {
           <thead>
             <tr>
               <th>ID</th>
+              <th>Date</th>
+              <th>Source</th>
               <th>Booker</th>
               <th>Product</th>
               <th>Pax</th>
+              <th>Status</th>
             </tr>
           </thead>
 
           <tbody>
-            {operations.map((op) => (
-              <tr key={op.id}>
-                <td>{op.id}</td>
-                <td>{op.booker}</td>
-                <td>{op.service}</td>
-                <td>{op.pax}</td>
+            {operations.map((operation) => (
+              <tr key={operation.id}>
+                <td>{operation.id}</td>
+                <td>{formatDate(operation.tourDate)}</td>
+                <td>{operation.source}</td>
+                <td>{operation.booker}</td>
+                <td>{operation.service}</td>
+                <td>{operation.pax}</td>
+                <td>{operation.status || "Confirmed"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-    </section>
+    </div>
   );
 }
 
