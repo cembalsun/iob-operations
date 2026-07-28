@@ -1,54 +1,29 @@
 import { useState } from "react";
 import "./App.css";
 
+import BookingForm from "./components/BookingForm";
+import CalendarPanel from "./components/CalendarPanel";
+import OperationsList from "./components/OperationsList";
+
 function App() {
-const products = {
-    GYG: [
-      "ERS - Eurasia Bike & Boat",
-      "OLD4 - Old City Basic",
-      "OLD6 - Old City Deluxe",
-    ],
+  const [operations, setOperations] = useState([]);
 
-    VIA: [
-      "ERS - Eurasia Bike & Boat",
-      "OLD4 - Old City Basic",
-      "OLD6 - Old City Deluxe",
-    ],
+  function saveBooking(newBooking) {
+    const operation = {
+      id: `IOB-26-${String(operations.length + 1).padStart(4, "0")}`,
+      ...newBooking,
+    };
 
-    BTC: [
-      "ERS - Eurasia Bike & Boat",
-    ],
-
-    CYC: [
-      "ERS - Eurasia Bike & Boat",
-      "OLD4 - Old City Basic",
-      "OLD6 - Old City Deluxe",
-      "OLD8 - Old City Combo",
-      "BOS - Beauties of Bosphorus",
-      "BPK - Bike Packing",
-      "BTP - Bike Travel Package",
-    ],
-    B2B: [
-      "ERS - Eurasia Bike & Boat",
-      "OLD4 - Old City Basic",
-      "OLD6 - Old City Deluxe",
-      "OLD8 - Old City Combo",
-      "BPK - Bike Packing",
-      "BTP - Bike Travel Package",
-    ],
-  };
-
-  const [source, setSource] = useState("GYG");
+    setOperations([...operations, operation]);
+  }
 
   return (
     <div className="app">
-
       <header className="header">
         <h1>🚴 BBOS - Balsun Business Operating System</h1>
       </header>
 
       <div className="container">
-
         <aside className="sidebar">
           <h3>Modules</h3>
 
@@ -65,76 +40,17 @@ const products = {
           </ul>
         </aside>
 
-       <main className="content">
+        <main className="content">
+          <div className="booking-layout">
+            <BookingForm onSave={saveBooking} />
 
-  <div className="booking-layout">
+            <CalendarPanel />
+          </div>
 
-    <section className="booking-form">
-
-      <h2>New Booking</h2>
-
-      <div className="form-row">
-        <label>Booking Source</label>
-        <select>
-          <option>GetYourGuide</option>
-          <option>Viator</option>
-          <option>BikeTours.com</option>
-          <option>Direct Booking</option>
-          <option>B2B</option>
-        </select>
+          <OperationsList operations={operations} />
+        </main>
       </div>
-
-      <div className="form-row">
-        <label>Tour Date</label>
-        <input type="date" />
-      </div>
-
-      <div className="form-row">
-        <label>Service</label>
-        <select>
-          <option>Eurasia Bike & Boat</option>
-          <option>Old City Basic (4h)</option>
-          <option>Old City Deluxe (6h)</option>
-          <option>Old City Combo (8h)</option>
-          <option>Beauties of Bosphorus</option>
-        </select>
-      </div>
-
-      <div className="form-row">
-        <label>Booker Name</label>
-        <input type="text" />
-      </div>
-
-      <div className="form-row">
-        <label>Pax</label>
-        <input type="number" />
-      </div>
-
-      <button className="save-btn">
-        Save Booking
-      </button>
-
-    </section>
-
-    <section className="calendar-panel">
-
-      <h2>July 2026</h2>
-
-      <div className="calendar-placeholder">
-
-        Monthly Operations Calendar
-
-      </div>
-
-    </section>
-
-  </div>
-
-</main>
- </div>
-
     </div>
-
   );
 }
 
