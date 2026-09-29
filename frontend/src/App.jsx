@@ -121,124 +121,72 @@ function App() {
         <Topbar />
 
         <main className="dashboard-content">
-          <section className="dashboard-heading">
-            <div>
-              <p className="eyebrow">OPERATIONS OVERVIEW</p>
-              <h1>Dashboard</h1>
-              <p>
-                Manage bookings, tours and daily operations from one place.
-              </p>
+          
+          <section className="operations-workspace">
+            <div className="booking-column" id="new-booking">
+              <BookingForm onSave={saveBooking} />
             </div>
 
-            <a className="primary-action" href="#new-booking">
-              <span>＋</span>
-              New Booking
-            </a>
-          </section>
-
-          <section className="stats-grid">
-            <article className="stat-card">
-              <div className="stat-icon stat-icon-green">🚴</div>
-
-              <div>
-                <span>Today's Tours</span>
-                <strong>{dashboardStats.todayTours}</strong>
-              </div>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon stat-icon-turquoise">👥</div>
-
-              <div>
-                <span>Today's Guests</span>
-                <strong>{dashboardStats.todayGuests}</strong>
-              </div>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon stat-icon-yellow">💳</div>
-
-              <div>
-                <span>Pending Payments</span>
-                <strong>{dashboardStats.pendingPayments}</strong>
-              </div>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon stat-icon-blue">📅</div>
-
-              <div>
-                <span>Tomorrow's Tours</span>
-                <strong>{dashboardStats.tomorrowTours}</strong>
-              </div>
-            </article>
-          </section>
-
-          <section className="dashboard-grid">
-            <div className="dashboard-main-column">
+            <div className="calendar-column">
               <CalendarPanel operations={operations} />
-
-              <OperationsList operations={operations} />
             </div>
+          </section>
 
-            <aside className="dashboard-side-column">
-              <div id="new-booking">
-                <BookingForm onSave={saveBooking} />
+          <section className="dashboard-lower-grid">
+            <section className="panel-card reminders-panel">
+              <div className="panel-heading">
+                <div>
+                  <p className="panel-kicker">ACTION CENTER</p>
+                  <h2>Reminders</h2>
+                </div>
+
+                <span className="panel-count">
+                  {dashboardStats.pendingPayments}
+                </span>
               </div>
 
-              <section className="panel-card reminders-panel">
-                <div className="panel-heading">
+              <div className="reminder-list">
+                <article className="reminder-item">
+                  <span className="reminder-dot reminder-dot-yellow" />
+
                   <div>
-                    <p className="panel-kicker">ACTION CENTER</p>
-                    <h2>Reminders</h2>
+                    <strong>Pending payments</strong>
+                    <p>
+                      {dashboardStats.pendingPayments} operation
+                      {dashboardStats.pendingPayments === 1 ? "" : "s"} require
+                      payment follow-up.
+                    </p>
                   </div>
+                </article>
 
-                  <span className="panel-count">
-                    {dashboardStats.pendingPayments}
-                  </span>
-                </div>
+                <article className="reminder-item">
+                  <span className="reminder-dot reminder-dot-green" />
 
-                <div className="reminder-list">
-                  <article className="reminder-item">
-                    <span className="reminder-dot reminder-dot-yellow" />
+                  <div>
+                    <strong>Guide assignments</strong>
+                    <p>
+                      Guide and assistant assignment will be added in the next
+                      sprint.
+                    </p>
+                  </div>
+                </article>
 
-                    <div>
-                      <strong>Pending payments</strong>
-                      <p>
-                        {dashboardStats.pendingPayments} operation
-                        {dashboardStats.pendingPayments === 1 ? "" : "s"} require
-                        payment follow-up.
-                      </p>
-                    </div>
-                  </article>
+                <article className="reminder-item">
+                  <span className="reminder-dot reminder-dot-turquoise" />
 
-                  <article className="reminder-item">
-                    <span className="reminder-dot reminder-dot-green" />
+                  <div>
+                    <strong>Tomorrow's operations</strong>
+                    <p>
+                      {dashboardStats.tomorrowTours} tour
+                      {dashboardStats.tomorrowTours === 1 ? "" : "s"} currently
+                      scheduled for tomorrow.
+                    </p>
+                  </div>
+                </article>
+              </div>
+            </section>
 
-                    <div>
-                      <strong>Guide assignments</strong>
-                      <p>
-                        Guide and assistant assignment will be added in the next
-                        sprint.
-                      </p>
-                    </div>
-                  </article>
-
-                  <article className="reminder-item">
-                    <span className="reminder-dot reminder-dot-turquoise" />
-
-                    <div>
-                      <strong>Tomorrow's operations</strong>
-                      <p>
-                        {dashboardStats.tomorrowTours} tour
-                        {dashboardStats.tomorrowTours === 1 ? "" : "s"} currently
-                        scheduled for tomorrow.
-                      </p>
-                    </div>
-                  </article>
-                </div>
-              </section>
-            </aside>
+            <OperationsList operations={operations} />
           </section>
         </main>
 

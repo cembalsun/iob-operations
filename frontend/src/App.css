@@ -1183,4 +1183,88 @@ button {
   .calendar-operation strong {
     font-size: 7px;
   }
+}/* =========================================================
+   DASHBOARD V2 - WORKSPACE LAYOUT
+   ========================================================= */
+
+@media (min-width: 1025px) {
+  .main-sidebar {
+    width: 190px;
+    padding: 16px 10px;
+  }
+
+  .main-shell {
+    margin-left: 190px;
+    width: calc(100% - 190px);
+  }
+
+  .topbar {
+    left: 190px;
+    width: calc(100% - 190px);
+  }
+
+  .brand-block {
+    margin-bottom: 18px;
+  }
+
+  .sidebar-navigation {
+    margin-top: 8px;
+  }
+
+  .navigation-item {
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+
+  .dashboard-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 18px 20px 32px;
+  }
+
+  .dashboard-heading {
+    margin: 0 0 14px;
+  }
+
+  .dashboard-heading h1 {
+    font-size: 28px;
+    margin: 2px 0 2px;
+  }
+
+  .dashboard-heading > div > p:last-child {
+    margin-top: 2px;
+  }
+
+  .eyebrow {
+    margin-bottom: 2px;
+  }
+
+  .operations-workspace {
+    display: grid;
+    grid-template-columns: minmax(290px, 30%) minmax(0, 70%);
+    gap: 16px;
+    width: 100%;
+    align-items: start;
+  }
+
+  .booking-column,
+  .calendar-column {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .booking-form,
+  .calendar-panel {
+    width: 100%;
+  }
+
+  .dashboard-lower-grid {
+    display: grid;
+    grid-template-columns: minmax(290px, 30%) minmax(0, 70%);
+    gap: 16px;
+    width: 100%;
+    margin-top: 16px;
+    align-items: start;
+  }
 }

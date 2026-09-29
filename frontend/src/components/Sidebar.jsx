@@ -21,11 +21,6 @@ function Sidebar() {
         </div>
       </div>
 
-      <button className="sidebar-booking-button" type="button">
-        <span>＋</span>
-        New Booking
-      </button>
-
       <nav className="sidebar-navigation">
         <p className="navigation-label">MAIN MENU</p>
 
