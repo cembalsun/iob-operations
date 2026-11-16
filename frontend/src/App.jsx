@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import "./App.css";
 
 import BookingForm from "./components/BookingForm";
@@ -8,45 +8,147 @@ import OperationsList from "./components/OperationsList";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 
-const STORAGE_KEY = "bbos_operations";
+import {
+  createBooking,
+  createOperation,
+  createBookingOperationLink,
+} from "./data/bookingModel";
 
-function getStoredOperations() {
+import {
+  loadBBOSData,
+} from "./data/bookingStorage";
+
+const DATA_KEYS = {
+  bookings: "bbos_bookings",
+  operations: "bbos_tour_operations",
+  links: "bbos_booking_operation_links",
+};
+
+function readInitialData() {
+  for (const key of Object.values(DATA_KEYS)) {
+    const raw = localStorage.getItem(key);
+
+    if (raw === null) continue;
+
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error(`Invalid data format: ${key}`);
+    }
+  }
+
+  return loadBBOSData();
+}
+
+function saveDataSafely(data) {
+  const previous = {};
+
+  for (const [name, key] of Object.entries(DATA_KEYS)) {
+    previous[name] = localStorage.getItem(key);
+  }
+
   try {
-    const storedData = localStorage.getItem(STORAGE_KEY);
+    localStorage.setItem(
+      DATA_KEYS.bookings,
+      JSON.stringify(data.bookings)
+    );
 
-    if (!storedData) {
-      return [];
+    localStorage.setItem(
+      DATA_KEYS.operations,
+      JSON.stringify(data.operations)
+    );
+
+    localStorage.setItem(
+      DATA_KEYS.links,
+      JSON.stringify(data.links)
+    );
+  } catch (error) {
+    console.error("BBOS save failed:", error);
+
+    for (const [name, key] of Object.entries(DATA_KEYS)) {
+      try {
+        if (previous[name] === null) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, previous[name]);
+        }
+      } catch (restoreError) {
+        console.error("Restore failed:", restoreError);
+      }
     }
 
-    const parsedData = JSON.parse(storedData);
-
-    return Array.isArray(parsedData) ? parsedData : [];
-  } catch (error) {
-    console.error("Operations could not be loaded:", error);
-    return [];
+    throw new Error(
+      "Could not save booking. Please check browser storage."
+    );
   }
 }
 
-function getNextOperationId(operations) {
-  const highestNumber = operations.reduce((highest, operation) => {
-    const match = operation.id?.match(/IOB-\d{2}-(\d{4})/);
+function getOperationView(data) {
+  const bookingsById = new Map(
+    data.bookings.map((booking) => [booking.id, booking])
+  );
 
-    if (!match) {
-      return highest;
+  const linksByOperation = new Map();
+
+  for (const link of data.links) {
+    if (!linksByOperation.has(link.operationId)) {
+      linksByOperation.set(link.operationId, []);
     }
 
-    return Math.max(highest, Number(match[1]));
-  }, 0);
+    linksByOperation.get(link.operationId).push(link);
+  }
 
-  return `IOB-26-${String(highestNumber + 1).padStart(4, "0")}`;
+  return data.operations.map((operation) => {
+    const operationLinks =
+      linksByOperation.get(operation.id) || [];
+
+    const connected = operationLinks
+      .map((link) => ({
+        link,
+        booking: bookingsById.get(link.bookingId),
+      }))
+      .filter((item) => Boolean(item.booking));
+
+    const active = connected.filter(
+      ({ booking }) => booking.status !== "Cancelled"
+    );
+
+    const pax = active.reduce(
+      (total, { link }) => total + Number(link.pax || 0),
+      0
+    );
+
+    const bookerNames = active
+      .map(({ booking }) => booking.booker)
+      .filter(Boolean);
+
+    const sources = [
+      ...new Set(
+        active.map(({ booking }) => booking.source).filter(Boolean)
+      ),
+    ];
+
+    const pendingPayments = active.filter(
+      ({ booking }) => booking.paymentStatus === "Pending"
+    ).length;
+
+    return {
+      ...operation,
+      pax,
+      booker: bookerNames.join(", "),
+      source: sources.join(", "),
+      bookingCount: active.length,
+      pendingPayments,
+    };
+  });
 }
 
 function isSameDate(dateString, targetDate) {
-  if (!dateString) {
-    return false;
-  }
+  if (!dateString) return false;
 
-  const [year, month, day] = dateString.split("-").map(Number);
+  const [year, month, day] = dateString
+    .split("-")
+    .map(Number);
 
   return (
     year === targetDate.getFullYear() &&
@@ -56,53 +158,93 @@ function isSameDate(dateString, targetDate) {
 }
 
 function App() {
-  const [operations, setOperations] = useState(getStoredOperations);
+  const [data, setData] = useState(readInitialData);
+  const [saveError, setSaveError] = useState("");
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(operations));
-  }, [operations]);
+  const operations = useMemo(
+    () => getOperationView(data),
+    [data]
+  );
 
   function saveBooking(newBooking) {
-    const operation = {
-      id: getNextOperationId(operations),
-      ...newBooking,
-      pax: Number(newBooking.pax),
+    const timestamp = new Date().toISOString();
+    const uniqueId = crypto.randomUUID();
+
+    const bookingId = `IOB-B-${uniqueId}`;
+    const operationId = `IOB-O-${uniqueId}`;
+    const linkId = `IOB-L-${uniqueId}`;
+
+    const booking = createBooking({
+      id: bookingId,
+      business: "IOB",
+      source: newBooking.source,
+      booker: newBooking.booker,
+      pax: newBooking.pax,
       status: "Confirmed",
-      guide: "",
-      assistant: "",
       paymentStatus: "Pending",
-      createdAt: new Date().toISOString(),
+      createdAt: timestamp,
+    });
+
+    const operation = createOperation({
+      id: operationId,
+      business: "IOB",
+      service: newBooking.service,
+      tourDate: newBooking.tourDate,
+      startTime: "09:00",
+      status: "Confirmed",
+      createdAt: timestamp,
+    });
+
+    const link = createBookingOperationLink({
+      id: linkId,
+      bookingId,
+      operationId,
+      pax: newBooking.pax,
+    });
+
+    const nextData = {
+      bookings: [booking, ...data.bookings],
+      operations: [operation, ...data.operations],
+      links: [link, ...data.links],
     };
 
-    setOperations((currentOperations) => [
-      operation,
-      ...currentOperations,
-    ]);
+    try {
+      saveDataSafely(nextData);
+      setData(nextData);
+      setSaveError("");
+    } catch (error) {
+      setSaveError(error.message);
+      throw error;
+    }
   }
 
   const dashboardStats = useMemo(() => {
     const today = new Date();
-
     const tomorrow = new Date();
+
     tomorrow.setDate(today.getDate() + 1);
 
-    const todayOperations = operations.filter((operation) =>
-      isSameDate(operation.tourDate, today)
+    const activeOperations = operations.filter(
+      (operation) => operation.status !== "Cancelled"
     );
 
-    const tomorrowOperations = operations.filter((operation) =>
-      isSameDate(operation.tourDate, tomorrow)
+    const todayOperations = activeOperations.filter(
+      (operation) => isSameDate(operation.tourDate, today)
+    );
+
+    const tomorrowOperations = activeOperations.filter(
+      (operation) => isSameDate(operation.tourDate, tomorrow)
     );
 
     const todayGuests = todayOperations.reduce(
-      (total, operation) => total + Number(operation.pax || 0),
+      (total, operation) => total + operation.pax,
       0
     );
 
-    const pendingPayments = operations.filter(
-      (operation) =>
-        operation.paymentStatus === "Pending" &&
-        operation.status !== "Cancelled"
+    const pendingPayments = data.bookings.filter(
+      (booking) =>
+        booking.paymentStatus === "Pending" &&
+        booking.status !== "Cancelled"
     ).length;
 
     return {
@@ -111,7 +253,7 @@ function App() {
       tomorrowTours: tomorrowOperations.length,
       pendingPayments,
     };
-  }, [operations]);
+  }, [operations, data.bookings]);
 
   return (
     <div className="app-shell">
@@ -121,7 +263,12 @@ function App() {
         <Topbar />
 
         <main className="dashboard-content">
-          
+          {saveError && (
+            <p className="form-message error" role="alert">
+              {saveError}
+            </p>
+          )}
+
           <section className="operations-workspace">
             <div className="booking-column" id="new-booking">
               <BookingForm onSave={saveBooking} />
@@ -148,11 +295,10 @@ function App() {
               <div className="reminder-list">
                 <article className="reminder-item">
                   <span className="reminder-dot reminder-dot-yellow" />
-
                   <div>
                     <strong>Pending payments</strong>
                     <p>
-                      {dashboardStats.pendingPayments} operation
+                      {dashboardStats.pendingPayments} booking
                       {dashboardStats.pendingPayments === 1 ? "" : "s"} require
                       payment follow-up.
                     </p>
@@ -161,19 +307,17 @@ function App() {
 
                 <article className="reminder-item">
                   <span className="reminder-dot reminder-dot-green" />
-
                   <div>
                     <strong>Guide assignments</strong>
                     <p>
-                      Guide and assistant assignment will be added in the next
-                      sprint.
+                      Guide and assistant assignment will be added
+                      in a later sprint.
                     </p>
                   </div>
                 </article>
 
                 <article className="reminder-item">
                   <span className="reminder-dot reminder-dot-turquoise" />
-
                   <div>
                     <strong>Tomorrow's operations</strong>
                     <p>
